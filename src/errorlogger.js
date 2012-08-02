@@ -15,17 +15,31 @@
 	}
 
 	function handleAMDError(err) {
-		alert("AMDJS error: Cannot load module '" + err.requireModules + "'");			
+
+		if ( err.requireModules ){
+			alert("AMDJS error: Cannot load module '" + err.requireModules + "'");
+		}
+		else{
+			alert("AMDJS error: '" + err.message+ "'");
+		}
 	}
 
 	function hookWindowError () {
 		window.onerror = handleScriptError;
 	}
 
+	function init () {
+		hookWindowError();
+		hookAMD();
+		return {
+			hookAMD: hookAMD
+		};
+	}
+
 	function hookAMD(noConflict) {
 
 		/* try to define AMD module, if it fails it is because no AMD library is loaded yet */
-		if ( !isDefinedAsAMD ){
+		if ( !defineAMDModule(init)  ){
 			return false;
 		}
 
@@ -43,14 +57,6 @@
 	}
 
 
-	function init () {
-		hookWindowError();
-		hookAMD();
-		return {
-			hookAMD: hookAMD
-		};
-	}
-
 
 	/* ===========================================
 	Export stuff to window object or AMD. 
@@ -66,7 +72,9 @@
 			return true;
 		}
 
-		window.define([], fn);
+		/* Using a named moduled is mantatory. See http://requirejs.org/docs/errors.html#mismatch */
+		window.define('errorlogger', [], fn);
+
 		isDefinedAsAMD = true;
 		return true;
 	}
